@@ -12,7 +12,8 @@ def read_xls_iris(filename):
 	return [data, colNames]
 
 
-# Returns data from the requested database in the following format:
+# Returns [data, primary_keys] from the requested database
+# Data is returned in the following format:
 # [table_name[table 0], column_names[table 0], column_data[table 0]]
 # [table_name[table 1], column_names[table 1], column_data[table 1]]
 # [table_name[table 2], column_names[table 2], column_data[table 2]]
@@ -26,6 +27,7 @@ def read_db(filename):
 	tableInfo = []
 
 	tmpInfo = []
+	primary_keys_array = []
 	for table_name in tables:
 		# Get formated table names (they are returned as tuples)
 		table_name = table_name[0]
@@ -34,6 +36,11 @@ def read_db(filename):
 			tableInfo.append(table_name)
 			# Get schema information for each table
 			tmpInfo.append(db.execute("PRAGMA table_info('{0}')".format(table_name)).fetchall())
+			primary_keys = []
+			for row in tmpInfo[-1]:
+				if row[5] != 0:
+					primary_keys.append(row[1])
+			primary_keys_array.append(primary_keys)
 
 	for i in range(len(tmpInfo)):
 		columnNames = []
@@ -50,4 +57,4 @@ def read_db(filename):
 		# For each table [i] add information about its name, column names and the data in each of those columns
 		tableInfo[i] = [tableInfo[i], columnNames, columnData]
 
-	return tableInfo
+	return [tableInfo, primary_keys_array]

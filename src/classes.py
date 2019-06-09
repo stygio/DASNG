@@ -3,34 +3,59 @@ from graphviz import Digraph, Graph
 
 
 class Tree:
-	def __init__(self, attributes=[], samples=[]):
+	def __init__(self, tree_type, attributes=[], samples=[]):
+		self.tree_type = tree_type
 		self.attributes = attributes
 		self.samples = samples
 		self.link_samples()
 
 	def link_samples(self):
-		for attribute in range(len(self.attributes)):
-			for sample in range(len(self.samples)):
-				self.samples[sample].nodes[attribute].avb_node = self.attributes[attribute].avb_tree.findElement(self.samples[sample].nodes[attribute].value)
+		if self.samples != None:
+			if self.tree_type == 'AGDS':
+				for attribute in range(len(self.attributes)):
+					for sample in range(len(self.samples)):
+						self.samples[sample].nodes[attribute].avb_node = self.attributes[attribute].avb_tree.findElement(self.samples[sample].nodes[attribute].value)
+			elif self.tree_type == 'DASNG':
+				return 0
 
 	def generate_dotGraph(self):
-		dotGraph = Digraph(comment = 'Dot Graph for AGDS', format = 'svg')
-		dotGraph.attr(splines = 'line')
-		for sample in range(len(self.samples)):
-			dotGraph.node(self.samples[sample].uniqueID, "S{0}".format(self.samples[sample].number), rank='max')
-			#pos = "{0},{1}!".format(-60+sample, -50)
+		dotGraph = Digraph(comment = 'Dot Graph', format = 'svg')
+		dotGraph.attr(splines = 'spline', pack = 'false', minlen='100.0')
+		if self.samples != None:
+			if self.tree_type == 'AGDS':
+				for sample in range(len(self.samples)):
+					dotGraph.node(self.samples[sample].uniqueID, self.samples[sample].name)
+			elif self.tree_type == 'DASNG':
+				for i in range(len(self.samples)):
+					with dotGraph.subgraph(name = "cluster_" + self.samples[i][0]) as dotSub:
+						dotSub.attr(style='filled')
+						dotSub.attr(color='lightgrey')
+						dotSub.node_attr.update(style='filled', color='white')
+						dotSub.attr(label=self.samples[i][0])
+						for j in range(len(self.samples[i][1])):
+							dotSub.node(self.samples[i][1][j].uniqueID, self.samples[i][1][j].name)
+				for i in range(len(self.samples)):
+					for j in range(len(self.samples[i][1])):
+						for k in range(len(self.samples[i][1][j].foreign_samples)):
+							dotGraph.edge(self.samples[i][1][j].uniqueID, self.samples[i][1][j].foreign_samples[k].uniqueID)
 		for attribute in range(len(self.attributes)):
-			self.attributes[attribute].add_to_dotGraph(dotGraph)
+			with dotGraph.subgraph(name = "cluster_" + self.attributes[attribute].name) as dotSub:
+				dotSub.attr(style='filled')
+				dotSub.attr(color='lightgrey')
+				dotSub.node_attr.update(style='filled', color='white')
+				self.attributes[attribute].add_to_dotGraph(dotSub)
+				dotSub.attr(label=self.attributes[attribute].name)
 		dotGraph.render()
 		return dotGraph
 
 
 class Sample:
-	def __init__(self, number, nodes = []):
+	def __init__(self, name, nodes = [], foreign_samples = []):
 		self.uniqueID = str(id(self))
-		self.number = number
+		self.name = name
 		self.nodes = nodes
 		self.nr_nodes = len(self.nodes)
+		self.foreign_samples = foreign_samples
 		self.similarity = 0
 
 	def add_nodes(self, node):
@@ -40,8 +65,14 @@ class Sample:
 			self.nodes.extend(node)
 		self.nr_nodes = len(self.nodes)
 
+	def add_foreign_samples(self, foreign_samples):
+		if type(foreign_samples) != list:
+			self.foreign_samples.append(foreign_samples)
+		else:
+			self.foreign_samples.extend(foreign_samples)
+
 	def value_string(self):
-		retString = "S{0} | ".format(self.number)
+		retString = "{0} | ".format(self.name)
 		for i in range(self.nr_nodes):
 			retString += "{0}: {1}".format(self.nodes[i].attribute, self.nodes[i].value)
 			if i < self.nr_nodes - 1:

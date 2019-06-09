@@ -1,4 +1,16 @@
+import pandas as pd
+import numpy as np
 import sqlite3
+
+
+# Returns data and column names from given .xls files
+def read_xls_iris(filename):
+	raw_data = pd.read_excel(filename)
+	colNames = raw_data.columns
+
+	data = np.array(raw_data)	
+	return [data, colNames]
+
 
 # Returns data from the requested database in the following format:
 # [table_name[table 0], column_names[table 0], column_data[table 0]]

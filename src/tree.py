@@ -1,12 +1,13 @@
 import classes
-import xlsParser
+import dataParser
 import numpy as np
 from statistics import median
 import time
 
+
 def create_tree(filename):
 
-	[data, columns] = xlsParser.read_xls_iris(filename)
+	[data, columns] = dataParser.read_xls_iris(filename)
 
 	nr_samples = data.shape[0]
 	nr_attributes = data.shape[1]
@@ -113,3 +114,7 @@ def average_benchmark(AGDS, data):
 			tmpAverage = AGDS.attributes[i].calculateAverage()
 			tmpTime = time.time() - tmpTime
 			print("{0}: {1}, time: {2}".format(AGDS.attributes[i].name, tmpAverage, tmpTime))
+
+
+def create_DASNG(filename):
+	return 0

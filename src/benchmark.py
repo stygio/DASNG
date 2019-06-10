@@ -5,7 +5,7 @@ import dataParser
 
 filename = '../data/IrisDataMultiples.xls'
 
-agds = tree.create_tree(filename)
+agds = tree.create_AGDS(filename)
 [data, columns] = dataParser.read_xls_iris(filename)
 
 tree.median_benchmark(agds, data)

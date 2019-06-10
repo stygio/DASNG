@@ -5,7 +5,7 @@ from statistics import median
 import time
 
 
-def create_tree(filename):
+def create_AGDS(filename):
 
 	[data, columns] = dataParser.read_xls_iris(filename)
 
@@ -15,7 +15,7 @@ def create_tree(filename):
 	# Create objects
 	samples = []
 	for sample_nr in range(nr_samples):
-		samples.append(classes.Sample(name = sample_nr, nodes = []))
+		samples.append(classes.Sample(name = str(sample_nr), nodes = []))
 
 	# Create attributes and nodes
 	attributes = []
@@ -50,7 +50,9 @@ def calculate_similarities(AGDS, tmpSample = None, tmpValues = []):
 	sorted_indexes = np.argsort(list_of_sample_similarity[:, 1], axis=0)
 	list_of_sample_similarity = list_of_sample_similarity[sorted_indexes]
 	list_of_sample_similarity = list_of_sample_similarity[::-1]	# Descending order
-	for i in range(len(list_of_sample_similarity)):
+	# Printing
+	# for i in range(len(list_of_sample_similarity)): # Print all samples
+	for i in range(10): # Print first 10 samples
 		print("{0}; Similarity = {1:.2f}%".format(list_of_sample_similarity[i][0].value_string(), list_of_sample_similarity[i][1]*100))
 	return list_of_sample_similarity
 

@@ -1,5 +1,5 @@
 import numpy as np
-from graphviz import Digraph, Graph
+from graphviz import Digraph
 
 
 class Tree:
@@ -16,22 +16,26 @@ class Tree:
 					for sample in range(len(self.samples)):
 						self.samples[sample].nodes[attribute].avb_node = self.attributes[attribute].avb_tree.findElement(self.samples[sample].nodes[attribute].value)
 			elif self.tree_type == 'DASNG':
+				# TO DO
 				return 0
 
 	def generate_dotGraph(self):
 		dotGraph = Digraph(comment = 'Dot Graph', format = 'svg')
-		dotGraph.attr(splines = 'spline', pack = 'false', minlen='100.0')
+		dotGraph.attr(splines = 'spline', ranksep = '3')
 		if self.samples != None:
 			if self.tree_type == 'AGDS':
-				for sample in range(len(self.samples)):
-					dotGraph.node(self.samples[sample].uniqueID, self.samples[sample].name)
+				with dotGraph.subgraph(name = "cluster_" + "samples") as dotSub:
+					dotSub.attr(label="<<font point-size='26'><u><b>Samples</b></u></font>>")
+					dotSub.attr(style='filled', color='burlywood')
+					dotSub.node_attr.update(style="filled", fillcolor="white", color="black")
+					for sample in range(len(self.samples)):
+						dotSub.node(self.samples[sample].uniqueID, "S_" + self.samples[sample].name)
 			elif self.tree_type == 'DASNG':
 				for i in range(len(self.samples)):
 					with dotGraph.subgraph(name = "cluster_" + self.samples[i][0]) as dotSub:
-						dotSub.attr(style='filled')
-						dotSub.attr(color='lightgrey')
-						dotSub.node_attr.update(style='filled', color='white')
-						dotSub.attr(label=self.samples[i][0])
+						dotSub.attr(label="<<font point-size='26'><u><b>{0}</b></u></font>>".format(self.samples[i][0]))
+						dotSub.attr(style='filled', color='burlywood')
+						dotSub.node_attr.update(style="filled", fillcolor="white", color="black")
 						for j in range(len(self.samples[i][1])):
 							dotSub.node(self.samples[i][1][j].uniqueID, self.samples[i][1][j].name)
 				for i in range(len(self.samples)):
@@ -40,11 +44,10 @@ class Tree:
 							dotGraph.edge(self.samples[i][1][j].uniqueID, self.samples[i][1][j].foreign_samples[k].uniqueID)
 		for attribute in range(len(self.attributes)):
 			with dotGraph.subgraph(name = "cluster_" + self.attributes[attribute].name) as dotSub:
-				dotSub.attr(style='filled')
-				dotSub.attr(color='lightgrey')
-				dotSub.node_attr.update(style='filled', color='white')
+				dotSub.attr(label="<<font point-size='26'><u><b>{0}</b></u></font>>".format(self.attributes[attribute].name))
+				dotSub.attr(style='filled', color='cadetblue1')
+				dotSub.node_attr.update(style="filled", fillcolor="khaki1", color="black")
 				self.attributes[attribute].add_to_dotGraph(dotSub)
-				dotSub.attr(label=self.attributes[attribute].name)
 		dotGraph.render()
 		return dotGraph
 
@@ -74,7 +77,7 @@ class Sample:
 	def value_string(self):
 		retString = "{0} | ".format(self.name)
 		for i in range(self.nr_nodes):
-			retString += "{0}: {1}".format(self.nodes[i].attribute, self.nodes[i].value)
+			retString += "{0}: {1}".format(self.nodes[i].attribute.name, self.nodes[i].value)
 			if i < self.nr_nodes - 1:
 				retString += ", "
 		return retString
@@ -135,9 +138,7 @@ class Attribute:
 		return self.avb_tree.root.findElement(searchedValue)
 
 	def add_to_dotGraph(self, dotGraph):
-		dotGraph.node(self.uniqueID, self.name)
-		dotGraph.node(self.avb_tree.root.uniqueID, self.avb_tree.root.value_string())
-		dotGraph.edge(self.uniqueID, self.avb_tree.root.uniqueID)
+		dotGraph.node(self.avb_tree.root.uniqueID, self.avb_tree.root.html_table())
 		self.avb_tree.root.add_to_dotGraph(dotGraph)
 
 	def calculateAverage(self):
@@ -299,6 +300,13 @@ class AvbNode:
 			retVal = "{0} | {1}\n{2} | {3}".format(self.keys[0].nr_samples, self.keys[1].nr_samples, self.keys[0].value, self.keys[1].value)
 		return retVal
 
+	def html_table(self):
+		if len(self.keys) == 1:
+			retVal = "<<table><tr><td> {0} </td></tr><tr><td><b> {1} </b></td></tr></table>>".format(self.keys[0].nr_samples, self.keys[0].value)
+		else:
+			retVal = "<<table><tr><td> {0} </td><td> {1} </td></tr><tr><td><b> {2} </b></td><td><b> {3} </b></td></tr></table>>".format(self.keys[0].nr_samples, self.keys[1].nr_samples, self.keys[0].value, self.keys[1].value)
+		return retVal
+
 	def remove_self_from_parent(self):
 		if self.parent.left == self:
 			self.parent.left = None
@@ -454,15 +462,15 @@ class AvbNode:
 	def add_to_dotGraph(self, dotGraph):
 		# Add children of this AvbNode to the dotGraph if they exist
 		if self.left != None:
-			dotGraph.node(self.left.uniqueID, self.left.value_string())
+			dotGraph.node(self.left.uniqueID, self.left.html_table())
 			dotGraph.edge(self.uniqueID, self.left.uniqueID)
 			self.left.add_to_dotGraph(dotGraph)
 		if self.middle != None:
-			dotGraph.node(self.middle.uniqueID, self.middle.value_string())
+			dotGraph.node(self.middle.uniqueID, self.middle.html_table())
 			dotGraph.edge(self.uniqueID, self.middle.uniqueID)
 			self.middle.add_to_dotGraph(dotGraph)
 		if self.right != None:
-			dotGraph.node(self.right.uniqueID, self.right.value_string())
+			dotGraph.node(self.right.uniqueID, self.right.html_table())
 			dotGraph.edge(self.uniqueID, self.right.uniqueID)
 			self.right.add_to_dotGraph(dotGraph)
 		# Connect this AvbNode to the samples it represents

@@ -1,5 +1,6 @@
-# DASNG
+# DASNG + AGDS
 Deep Associative Semantic Neural Graphs for Knowledge Representation and Fast Data Exploration in Relational Databases
+Also includes AGDS
 
  - Source code in _/src_
  - Example data files in _/data_
